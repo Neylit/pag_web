@@ -1,0 +1,88 @@
+---
+title: "DoE"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+#Análisis de diseño experimmental
+
+#Base de datos 
+
+>https://docs.google.com/spreadsheets/d/15r7ZwcZZHbEgltlF6gSFvCTFA-CFzVBWwg3mFlRyKPs/edit?gid=1263018298#gid=1263018298
+
+## Identificar factores 
+
+1. Factor 1: genotipo
+2. Factor 2: riego
+
+## Identificar el modelo
+
+Factorial en DBCA
+
+$$y= \mu+ bloque + G + I+ G*I + \xi$$
+
+# Activar los paquetes 
+
+# Project Setup
+
+```{r}
+#| label: setup
+
+source('https://inkaverse.com/setup.r')
+```
+
+# Data import
+
+```{r}
+gs <- "https://docs.google.com/spreadsheets/d/15r7ZwcZZHbEgltlF6gSFvCTFA-CFzVBWwg3mFlRyKPs/edit?gid=172957346#gid=172957346" %>% 
+  as_sheets_id()
+
+fb <- gs %>% 
+  range_read(ss = .,sheet = "fb") %>% 
+  mutate(across(c(1:4), ~ as.factor(.))) 
+
+fb %>% str()
+```
+
+
+# Análisis de varianza 
+
+```{r}
+# aov() ó lm()
+
+md <- aov(formula = lfa ~ block + irrigation + genotype + irrigation * genotype, fb)
+
+anova (md)
+```
+
+# Comparación de medias 
+
+```{r}
+mc <- emmeans(md, ~ irrigation * genotype)
+
+# letras de significancia 
+
+tab <- cld (mc, 
+            adjust = "tukey", 
+            Letters = letters,
+            decreasing = T)
+
+tab
+```
+
+
+# Representación gráfica
+
+```{r}
+pl <- plot_smr(data = tab,
+               x = "genotype",
+               y = "emmean",
+               group = "irrigation",
+               error = "SE",
+               sig = ".group",
+               ylab = "Área foliar (cm2)"
+               )
+
+pl
+```
